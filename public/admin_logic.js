@@ -490,24 +490,69 @@ valor_balcao_3: `;
                 try {
                     const json = JSON.parse(e.target.result);
                     if (!Array.isArray(json)) throw new Error('O arquivo deve ser um array de fichas.');
-                    if (confirm(`Foram encontrados ${json.length} fichas no arquivo. Deseja importá-las?`)) {
+                    // Agrupa fichas por produto (nome, linha, textura, acabamento, etc.)
+                    const produtosMap = new Map();
+                    for (const ficha of json) {
+                        // Chave única para cada produto
+                        const chave = [
+                            ficha.marca,
+                            ficha.nome,
+                            ficha.linha,
+                            ficha.textura,
+                            ficha.acabamento,
+                            ficha.dimensao_padrao || ficha.dimensao,
+                            ficha.descricao,
+                            JSON.stringify(ficha.combinacoes),
+                            ficha.status,
+                            ficha.categoria,
+                            ficha.fita_borda
+                        ].join('|');
+                        if (!produtosMap.has(chave)) {
+                            produtosMap.set(chave, {
+                                marca: ficha.marca || '',
+                                nome: ficha.nome || '',
+                                linha: ficha.linha || '',
+                                textura: ficha.textura || '',
+                                acabamento: ficha.acabamento || '',
+                                dimensao_padrao: ficha.dimensao_padrao || ficha.dimensao || '',
+                                descricao: ficha.descricao || '',
+                                combinacoes: Array.isArray(ficha.combinacoes) ? ficha.combinacoes.join(', ') : (ficha.combinacoes || ''),
+                                status: ficha.status || '',
+                                categoria: ficha.categoria || '',
+                                fita_borda: ficha.fita_borda || '',
+                                preco_fita_65mm_rolo: ficha.preco_fita_65mm_rolo || ficha.preco_fita || 0,
+                                metragem_rolo_fita: ficha.metragem_rolo_fita || ficha.metragem_fita || 0,
+                                espessuras: []
+                            });
+                        }
+                        // Adiciona espessura
+                        produtosMap.get(chave).espessuras.push({
+                            espessura: ficha.esp,
+                            valor_marcenaria: typeof ficha.valor_marcenaria === 'string' ? Number(ficha.valor_marcenaria.replace(/[^\d.,]/g, '').replace(',', '.')) : ficha.valor_marcenaria,
+                            valor_balcao: typeof ficha.valor_balcao === 'string' ? Number(ficha.valor_balcao.replace(/[^\d.,]/g, '').replace(',', '.')) : ficha.valor_balcao,
+                            ref_interna: ficha.ref_interna || '',
+                            preco_origem: 'importado'
+                        });
+                    }
+                    const produtos = Array.from(produtosMap.values());
+                    if (confirm(`Serão importados ${produtos.length} produtos. Deseja continuar?`)) {
                         let successCount = 0;
                         let errorCount = 0;
-                        for (const ficha of json) {
+                        for (const produto of produtos) {
                             try {
                                 const response = await fetch('/api/chapas', {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify(ficha)
+                                    body: JSON.stringify(produto)
                                 });
                                 if(response.ok) successCount++;
                                 else errorCount++;
                             } catch (err) {
                                 errorCount++;
-                                console.error('Erro ao importar ficha:', ficha.nome, err);
+                                console.error('Erro ao importar produto:', produto.nome, err);
                             }
                         }
-                        alert(`Importação concluída!\n${successCount} fichas importadas com sucesso.\n${errorCount} fichas falharam.`);
+                        alert(`Importação concluída!\n${successCount} produtos importados com sucesso.\n${errorCount} produtos falharam.`);
                         if (successCount > 0) {
                             const gestaoTab = document.querySelector('[data-tab="tab-gestao"]');
                             if (gestaoTab) gestaoTab.click();
