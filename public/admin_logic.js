@@ -332,8 +332,35 @@ valor_balcao_3: `;
                 if (marcaSelect) marcaSelect.value = data.marca || document.getElementById('ia-marca').value;
                 document.getElementById('nome').value = data.nome || document.getElementById('ia-nome').value;
                 if (linhaSelect) linhaSelect.value = data.linha || '';
-                document.getElementById('textura').value = data.textura || '';
-                document.getElementById('acabamento').value = data.acabamento || '';
+
+                // Preencher campos seletivos corretamente
+                const texturaSelect = document.getElementById('textura');
+                if (texturaSelect) {
+                    let found = false;
+                    for (let i = 0; i < texturaSelect.options.length; i++) {
+                        if (texturaSelect.options[i].text.toLowerCase() === (data.textura || '').toLowerCase() ||
+                            texturaSelect.options[i].value.toLowerCase() === (data.textura || '').toLowerCase()) {
+                            texturaSelect.selectedIndex = i;
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) texturaSelect.selectedIndex = 0;
+                }
+                const acabamentoSelect = document.getElementById('acabamento');
+                if (acabamentoSelect) {
+                    let found = false;
+                    for (let i = 0; i < acabamentoSelect.options.length; i++) {
+                        if (acabamentoSelect.options[i].text.toLowerCase() === (data.acabamento || '').toLowerCase() ||
+                            acabamentoSelect.options[i].value.toLowerCase() === (data.acabamento || '').toLowerCase()) {
+                            acabamentoSelect.selectedIndex = i;
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) acabamentoSelect.selectedIndex = 0;
+                }
+
                 document.getElementById('dimensao_padrao').value = data.dimensao_padrao || '';
                 document.getElementById('descricao').value = data.descricao || '';
                 document.getElementById('combinacoes').value = data.combinacoes || '';
