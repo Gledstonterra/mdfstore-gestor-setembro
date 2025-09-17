@@ -320,22 +320,30 @@ valor_balcao_3: `;
         fillFormBtn.addEventListener('click', () => {
             const results = document.getElementById('ia-results-input').value;
             try {
-                const data = {};
-                results.split('\n').forEach(line => {
-                    const [key, ...valueParts] = line.split(':');
-                    if (key && valueParts.length > 0) {
-                        const value = valueParts.join(':').trim();
-                        data[key.trim()] = value;
-                    }
-                });
+                let data;
+                // Tenta parsear como JSON
+                try {
+                    data = JSON.parse(results);
+                } catch {
+                    // Se não for JSON, tenta parsear como lista antiga
+                    data = {};
+                    results.split('\n').forEach(line => {
+                        const [key, ...valueParts] = line.split(':');
+                        if (key && valueParts.length > 0) {
+                            const value = valueParts.join(':').trim();
+                            data[key.trim()] = value;
+                        }
+                    });
+                }
 
+                // Preenche campos do formulário
                 if (marcaSelect) marcaSelect.value = data.marca || document.getElementById('ia-marca').value;
                 document.getElementById('nome').value = data.nome || document.getElementById('ia-nome').value;
                 if (linhaSelect) linhaSelect.value = data.linha || '';
 
-                // Preencher campos seletivos corretamente
+                // Campos seletivos
                 const texturaSelect = document.getElementById('textura');
-                if (texturaSelect) {
+                if (texturaSelect && data.textura) {
                     let found = false;
                     for (let i = 0; i < texturaSelect.options.length; i++) {
                         if (texturaSelect.options[i].text.toLowerCase() === (data.textura || '').toLowerCase() ||
@@ -348,7 +356,7 @@ valor_balcao_3: `;
                     if (!found) texturaSelect.selectedIndex = 0;
                 }
                 const acabamentoSelect = document.getElementById('acabamento');
-                if (acabamentoSelect) {
+                if (acabamentoSelect && data.acabamento) {
                     let found = false;
                     for (let i = 0; i < acabamentoSelect.options.length; i++) {
                         if (acabamentoSelect.options[i].text.toLowerCase() === (data.acabamento || '').toLowerCase() ||
@@ -361,23 +369,32 @@ valor_balcao_3: `;
                     if (!found) acabamentoSelect.selectedIndex = 0;
                 }
 
-                document.getElementById('dimensao_padrao').value = data.dimensao_padrao || '';
+                document.getElementById('dimensao_padrao').value = data.dimensao_padrao || data.dimensao || '';
                 document.getElementById('descricao').value = data.descricao || '';
-                document.getElementById('combinacoes').value = data.combinacoes || '';
-                document.getElementById('preco_fita_65mm_rolo').value = data.preco_fita_65mm_rolo || '';
-                document.getElementById('metragem_rolo_fita').value = data.metragem_rolo_fita || '';
+                document.getElementById('combinacoes').value = Array.isArray(data.combinacoes) ? data.combinacoes.join(', ') : (data.combinacoes || '');
+                document.getElementById('preco_fita_65mm_rolo').value = data.preco_fita_65mm_rolo || data.preco_fita || '';
+                document.getElementById('metragem_rolo_fita').value = data.metragem_rolo_fita || data.metragem_fita || '';
 
+                // Preencher campos de espessura
                 if(thicknessContainer) thicknessContainer.innerHTML = '';
-                for (let i = 1; i < 10; i++) {
-                    if (data[`espessura_${i}`]) {
-                        addThicknessField({
-                            espessura: data[`espessura_${i}`],
-                            valor_marcenaria: (data[`valor_marcenaria_${i}`] || '').replace(/[^\d.,]/g, ''),
-                            valor_balcao: (data[`valor_balcao_${i}`] || '').replace(/[^\d.,]/g, '')
-                        });
+                if (data.esp !== undefined) {
+                    addThicknessField({
+                        espessura: data.esp,
+                        valor_marcenaria: (data.valor_marcenaria || '').replace(/[^\d.,]/g, ''),
+                        valor_balcao: (data.valor_balcao || '').replace(/[^\d.,]/g, '')
+                    });
+                } else {
+                    for (let i = 1; i < 10; i++) {
+                        if (data[`espessura_${i}`]) {
+                            addThicknessField({
+                                espessura: data[`espessura_${i}`],
+                                valor_marcenaria: (data[`valor_marcenaria_${i}`] || '').replace(/[^\d.,]/g, ''),
+                                valor_balcao: (data[`valor_balcao_${i}`] || '').replace(/[^\d.,]/g, '')
+                            });
+                        }
                     }
                 }
-                
+
                 alert('Formulário preenchido! Verifique os dados e salve.');
             } catch (error) {
                 console.error("Erro ao preencher o formulário com dados da IA:", error);
@@ -389,88 +406,73 @@ valor_balcao_3: `;
     // --- LÓGICA DE IMPORTAR/EXPORTAR ---
     if (exportTemplateBtn) {
         exportTemplateBtn.addEventListener('click', () => {
-            if (typeof XLSX === 'undefined') {
-                console.error('A biblioteca XLSX não está carregada.');
-                return alert('Erro: Biblioteca de exportação não carregada.');
-            }
-            const data = [
-                ["marca", "nome", "linha", "textura", "acabamento", "dimensao_padrao", "descricao", "combinacoes", "preco_fita_65mm_rolo", "metragem_rolo_fita", "espessura_1", "valor_marcenaria_1", "valor_balcao_1", "espessura_2", "valor_marcenaria_2", "valor_balcao_2"]
-            ];
-            const ws = XLSX.utils.aoa_to_sheet(data);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Template_Cadastro");
-            XLSX.writeFile(wb, "template_cadastro_chapas.xlsx");
+            // Exporta um template JSON com todos os campos
+            const templateFicha = [{
+                "nome": "",
+                "linha": "",
+                "textura": "",
+                "acabamento": "",
+                "descricao": "",
+                "combinacoes": [],
+                "status": "Ativo",
+                "categoria": "",
+                "dimensao_padrao": "",
+                "fita_borda": "",
+                "esp": 0,
+                "ref_interna": "",
+                "valor_marcenaria": "",
+                "valor_balcao": ""
+            }];
+            const blob = new Blob([JSON.stringify(templateFicha, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'template_ficha_mdf.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         });
     }
     
     if (importFileInput) {
         importFileInput.addEventListener('change', (event) => {
-            if (typeof XLSX === 'undefined') {
-                console.error('A biblioteca XLSX não está carregada.');
-                return alert('Erro: Biblioteca de importação não carregada.');
-            }
             const file = event.target.files[0];
             if (!file) return;
-
             const reader = new FileReader();
             reader.onload = async (e) => {
                 try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    const sheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[sheetName];
-                    const json = XLSX.utils.sheet_to_json(worksheet);
-
-                    if (confirm(`Foram encontrados ${json.length} produtos na planilha. Deseja importá-los?`)) {
+                    const json = JSON.parse(e.target.result);
+                    if (!Array.isArray(json)) throw new Error('O arquivo deve ser um array de fichas.');
+                    if (confirm(`Foram encontrados ${json.length} fichas no arquivo. Deseja importá-las?`)) {
                         let successCount = 0;
                         let errorCount = 0;
-                        for (const item of json) {
+                        for (const ficha of json) {
                             try {
-                                const espessuras = [];
-                                for (let i = 1; i < 10; i++) {
-                                    if (item[`espessura_${i}`]) {
-                                        espessuras.push({
-                                            espessura: item[`espessura_${i}`],
-                                            valor_marcenaria: item[`valor_marcenaria_${i}`] || 0,
-                                            valor_balcao: item[`valor_balcao_${i}`] || 0,
-                                            preco_origem: 'importado'
-                                        });
-                                    }
-                                }
-                                
-                                const productData = { ...item };
-                                for (let i = 1; i < 10; i++) {
-                                    delete productData[`espessura_${i}`];
-                                    delete productData[`valor_marcenaria_${i}`];
-                                    delete productData[`valor_balcao_${i}`];
-                                }
-                                productData.espessuras = espessuras;
-
                                 const response = await fetch('/api/chapas', {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify(productData)
+                                    body: JSON.stringify(ficha)
                                 });
                                 if(response.ok) successCount++;
                                 else errorCount++;
-
                             } catch (err) {
                                 errorCount++;
-                                console.error('Erro ao importar item:', item.nome, err);
+                                console.error('Erro ao importar ficha:', ficha.nome, err);
                             }
                         }
-                        alert(`Importação concluída!\n${successCount} produtos importados com sucesso.\n${errorCount} produtos falharam.`);
+                        alert(`Importação concluída!\n${successCount} fichas importadas com sucesso.\n${errorCount} fichas falharam.`);
                         if (successCount > 0) {
                             const gestaoTab = document.querySelector('[data-tab="tab-gestao"]');
                             if (gestaoTab) gestaoTab.click();
                         }
                     }
                 } catch (readError) {
-                    console.error('Erro ao ler o arquivo Excel:', readError);
+                    console.error('Erro ao ler o arquivo JSON:', readError);
                     alert('Houve um erro ao ler o arquivo. Verifique se o formato está correto.');
                 }
             };
-            reader.readAsArrayBuffer(file);
+            reader.readAsText(file);
         });
     }
 
