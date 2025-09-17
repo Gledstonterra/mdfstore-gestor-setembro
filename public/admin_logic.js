@@ -372,8 +372,8 @@ valor_balcao_3: `;
                     if (data[`espessura_${i}`]) {
                         addThicknessField({
                             espessura: data[`espessura_${i}`],
-                            valor_marcenaria: data[`valor_marcenaria_${i}`] || '',
-                            valor_balcao: data[`valor_balcao_${i}`] || ''
+                            valor_marcenaria: (data[`valor_marcenaria_${i}`] || '').replace(/[^\d.,]/g, ''),
+                            valor_balcao: (data[`valor_balcao_${i}`] || '').replace(/[^\d.,]/g, '')
                         });
                     }
                 }
