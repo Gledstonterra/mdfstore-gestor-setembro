@@ -336,65 +336,111 @@ valor_balcao_3: `;
                     });
                 }
 
-                // Preenche campos do formulário
-                if (marcaSelect) marcaSelect.value = data.marca || document.getElementById('ia-marca').value;
-                document.getElementById('nome').value = data.nome || document.getElementById('ia-nome').value;
-                if (linhaSelect) linhaSelect.value = data.linha || '';
-
-                // Campos seletivos
-                const texturaSelect = document.getElementById('textura');
-                if (texturaSelect && data.textura) {
-                    let found = false;
-                    for (let i = 0; i < texturaSelect.options.length; i++) {
-                        if (texturaSelect.options[i].text.toLowerCase() === (data.textura || '').toLowerCase() ||
-                            texturaSelect.options[i].value.toLowerCase() === (data.textura || '').toLowerCase()) {
-                            texturaSelect.selectedIndex = i;
-                            found = true;
-                            break;
+                // Se for array de fichas, preenche todos os campos e espessuras
+                if (Array.isArray(data)) {
+                    if (data.length === 0) throw new Error('Nenhuma ficha encontrada no JSON.');
+                    // Preenche campos principais com a primeira ficha
+                    const ficha = data[0];
+                    if (marcaSelect) marcaSelect.value = ficha.marca || document.getElementById('ia-marca').value;
+                    document.getElementById('nome').value = ficha.nome || document.getElementById('ia-nome').value;
+                    if (linhaSelect) linhaSelect.value = ficha.linha || '';
+                    const texturaSelect = document.getElementById('textura');
+                    if (texturaSelect && ficha.textura) {
+                        let found = false;
+                        for (let i = 0; i < texturaSelect.options.length; i++) {
+                            if (texturaSelect.options[i].text.toLowerCase() === (ficha.textura || '').toLowerCase() ||
+                                texturaSelect.options[i].value.toLowerCase() === (ficha.textura || '').toLowerCase()) {
+                                texturaSelect.selectedIndex = i;
+                                found = true;
+                                break;
+                            }
                         }
+                        if (!found) texturaSelect.selectedIndex = 0;
                     }
-                    if (!found) texturaSelect.selectedIndex = 0;
-                }
-                const acabamentoSelect = document.getElementById('acabamento');
-                if (acabamentoSelect && data.acabamento) {
-                    let found = false;
-                    for (let i = 0; i < acabamentoSelect.options.length; i++) {
-                        if (acabamentoSelect.options[i].text.toLowerCase() === (data.acabamento || '').toLowerCase() ||
-                            acabamentoSelect.options[i].value.toLowerCase() === (data.acabamento || '').toLowerCase()) {
-                            acabamentoSelect.selectedIndex = i;
-                            found = true;
-                            break;
+                    const acabamentoSelect = document.getElementById('acabamento');
+                    if (acabamentoSelect && ficha.acabamento) {
+                        let found = false;
+                        for (let i = 0; i < acabamentoSelect.options.length; i++) {
+                            if (acabamentoSelect.options[i].text.toLowerCase() === (ficha.acabamento || '').toLowerCase() ||
+                                acabamentoSelect.options[i].value.toLowerCase() === (ficha.acabamento || '').toLowerCase()) {
+                                acabamentoSelect.selectedIndex = i;
+                                found = true;
+                                break;
+                            }
                         }
+                        if (!found) acabamentoSelect.selectedIndex = 0;
                     }
-                    if (!found) acabamentoSelect.selectedIndex = 0;
-                }
-
-                document.getElementById('dimensao_padrao').value = data.dimensao_padrao || data.dimensao || '';
-                document.getElementById('descricao').value = data.descricao || '';
-                document.getElementById('combinacoes').value = Array.isArray(data.combinacoes) ? data.combinacoes.join(', ') : (data.combinacoes || '');
-                document.getElementById('preco_fita_65mm_rolo').value = data.preco_fita_65mm_rolo || data.preco_fita || '';
-                document.getElementById('metragem_rolo_fita').value = data.metragem_rolo_fita || data.metragem_fita || '';
-
-                // Preencher campos de espessura
-                if(thicknessContainer) thicknessContainer.innerHTML = '';
-                if (data.esp !== undefined) {
-                    addThicknessField({
-                        espessura: data.esp,
-                        valor_marcenaria: (data.valor_marcenaria || '').replace(/[^\d.,]/g, ''),
-                        valor_balcao: (data.valor_balcao || '').replace(/[^\d.,]/g, '')
+                    document.getElementById('dimensao_padrao').value = ficha.dimensao_padrao || ficha.dimensao || '';
+                    document.getElementById('descricao').value = ficha.descricao || '';
+                    document.getElementById('combinacoes').value = Array.isArray(ficha.combinacoes) ? ficha.combinacoes.join(', ') : (ficha.combinacoes || '');
+                    document.getElementById('preco_fita_65mm_rolo').value = ficha.preco_fita_65mm_rolo || ficha.preco_fita || '';
+                    document.getElementById('metragem_rolo_fita').value = ficha.metragem_rolo_fita || ficha.metragem_fita || '';
+                    // Preenche todas as espessuras
+                    if(thicknessContainer) thicknessContainer.innerHTML = '';
+                    data.forEach(f => {
+                        addThicknessField({
+                            espessura: f.esp,
+                            valor_marcenaria: (f.valor_marcenaria || '').replace(/[^\d.,]/g, ''),
+                            valor_balcao: (f.valor_balcao || '').replace(/[^\d.,]/g, '')
+                        });
                     });
                 } else {
-                    for (let i = 1; i < 10; i++) {
-                        if (data[`espessura_${i}`]) {
-                            addThicknessField({
-                                espessura: data[`espessura_${i}`],
-                                valor_marcenaria: (data[`valor_marcenaria_${i}`] || '').replace(/[^\d.,]/g, ''),
-                                valor_balcao: (data[`valor_balcao_${i}`] || '').replace(/[^\d.,]/g, '')
-                            });
+                    // Preenche campos do formulário (modo antigo)
+                    if (marcaSelect) marcaSelect.value = data.marca || document.getElementById('ia-marca').value;
+                    document.getElementById('nome').value = data.nome || document.getElementById('ia-nome').value;
+                    if (linhaSelect) linhaSelect.value = data.linha || '';
+                    // Campos seletivos
+                    const texturaSelect = document.getElementById('textura');
+                    if (texturaSelect && data.textura) {
+                        let found = false;
+                        for (let i = 0; i < texturaSelect.options.length; i++) {
+                            if (texturaSelect.options[i].text.toLowerCase() === (data.textura || '').toLowerCase() ||
+                                texturaSelect.options[i].value.toLowerCase() === (data.textura || '').toLowerCase()) {
+                                texturaSelect.selectedIndex = i;
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (!found) texturaSelect.selectedIndex = 0;
+                    }
+                    const acabamentoSelect = document.getElementById('acabamento');
+                    if (acabamentoSelect && data.acabamento) {
+                        let found = false;
+                        for (let i = 0; i < acabamentoSelect.options.length; i++) {
+                            if (acabamentoSelect.options[i].text.toLowerCase() === (data.acabamento || '').toLowerCase() ||
+                                acabamentoSelect.options[i].value.toLowerCase() === (data.acabamento || '').toLowerCase()) {
+                                acabamentoSelect.selectedIndex = i;
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (!found) acabamentoSelect.selectedIndex = 0;
+                    }
+                    document.getElementById('dimensao_padrao').value = data.dimensao_padrao || data.dimensao || '';
+                    document.getElementById('descricao').value = data.descricao || '';
+                    document.getElementById('combinacoes').value = Array.isArray(data.combinacoes) ? data.combinacoes.join(', ') : (data.combinacoes || '');
+                    document.getElementById('preco_fita_65mm_rolo').value = data.preco_fita_65mm_rolo || data.preco_fita || '';
+                    document.getElementById('metragem_rolo_fita').value = data.metragem_rolo_fita || data.metragem_fita || '';
+                    // Preencher campos de espessura
+                    if(thicknessContainer) thicknessContainer.innerHTML = '';
+                    if (data.esp !== undefined) {
+                        addThicknessField({
+                            espessura: data.esp,
+                            valor_marcenaria: (data.valor_marcenaria || '').replace(/[^\d.,]/g, ''),
+                            valor_balcao: (data.valor_balcao || '').replace(/[^\d.,]/g, '')
+                        });
+                    } else {
+                        for (let i = 1; i < 10; i++) {
+                            if (data[`espessura_${i}`]) {
+                                addThicknessField({
+                                    espessura: data[`espessura_${i}`],
+                                    valor_marcenaria: (data[`valor_marcenaria_${i}`] || '').replace(/[^\d.,]/g, ''),
+                                    valor_balcao: (data[`valor_balcao_${i}`] || '').replace(/[^\d.,]/g, '')
+                                });
+                            }
                         }
                     }
                 }
-
                 alert('Formulário preenchido! Verifique os dados e salve.');
             } catch (error) {
                 console.error("Erro ao preencher o formulário com dados da IA:", error);
