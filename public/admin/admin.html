@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Gestor de Catálogo MDF</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+    /* Todas as classes Tailwind agora estão inline nos elementos HTML. */
+    </style>
+</head>
+<body class="bg-slate-200">
+    <div class="container mx-auto p-8">
+        <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-4">
+            <div class="flex items-center gap-4">
+                <img src="https://cdn-icons-png.flaticon.com/512/1041/1041916.png" alt="Logo" class="w-12 h-12">
+                <h1 class="text-4xl font-extrabold text-sky-700 tracking-tight drop-shadow">MDFSTORE <span class="text-slate-700 font-light">Gestor</span></h1>
+            </div>
+            <div class="flex gap-2">
+                <button id="btn-ia" type="button" class="bg-gradient-to-r from-sky-500 to-blue-600 text-white px-4 py-2 rounded-lg font-bold shadow hover:from-sky-600 hover:to-blue-700 flex items-center gap-2"><i class="fa-solid fa-wand-magic-sparkles"></i> Preencher com IA</button>
+                <button id="btn-importar" type="button" class="bg-green-500 text-white px-4 py-2 rounded-lg font-bold shadow hover:bg-green-600 flex items-center gap-2"><i class="fa-solid fa-file-import"></i> Importar</button>
+                <button id="btn-exportar" type="button" class="bg-amber-500 text-white px-4 py-2 rounded-lg font-bold shadow hover:bg-amber-600 flex items-center gap-2"><i class="fa-solid fa-file-export"></i> Exportar</button>
+                <a href="/home.html" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-lg font-bold shadow hover:bg-slate-300 flex items-center gap-2"><i class="fa-solid fa-arrow-left"></i> Catálogo</a>
+            </div>
+        </div>
+        <div id="feedback-message" class="mb-4 p-4 rounded-md text-center font-semibold hidden"></div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-1 bg-white p-8 rounded-2xl shadow-xl h-fit border border-sky-100">
+                <h2 id="form-title" class="text-2xl font-bold mb-4 text-sky-700">Cadastrar Nova Chapa</h2>
+                <form id="gestor-form" class="space-y-4">
+                    <input type="hidden" name="_id">
+                    <div>
+                        <label class="text-sm font-medium">Nome do Padrão*</label>
+                        <input type="text" name="nome" required class="form-input">
+                    </div>
+                    <div>
+                        <label class="text-sm font-medium">Marca*</label>
+                        <select name="marca" id="form-marca" class="form-input bg-slate-100"></select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div><label class="text-sm font-medium">Espessura (mm)*</label><input type="number" name="esp" required class="form-input"></div>
+                        <div><label class="text-sm font-medium">Ref. Interna*</label><input type="text" name="ref_interna" required placeholder="Ex: 1.1.13-SRT" class="form-input"></div>
+                    </div>
+                    <div><label class="text-sm font-medium">Linha</label><input type="text" name="linha" class="form-input"></div>
+                    <div><label class="text-sm font-medium">Textura</label><input type="text" name="textura" class="form-input"></div>
+                    <div><label class="text-sm font-medium">Acabamento</label><input type="text" name="acabamento" class="form-input"></div>
+                    <div><label class="text-sm font-medium">Descrição</label><textarea name="descricao" class="form-input"></textarea></div>
+                    <div><label class="text-sm font-medium">Combinações (separe por vírgula)</label><input type="text" name="combinacoes" class="form-input"></div>
+                    <div><label class="text-sm font-medium">Status</label><input type="text" name="status" class="form-input"></div>
+                    <div><label class="text-sm font-medium">Categoria</label><input type="text" name="categoria" class="form-input"></div>
+                    <div><label class="text-sm font-medium">Dimensão Padrão</label><input type="text" name="dimensao_padrao" class="form-input"></div>
+                    <div><label class="text-sm font-medium">Fita de Borda</label><input type="text" name="fita_borda" class="form-input"></div>
+                    <div><label class="text-sm font-medium">Valor Marcenaria</label><input type="text" name="valor_marcenaria" class="form-input"></div>
+                    <div><label class="text-sm font-medium">Valor Balcão</label><input type="text" name="valor_balcao" class="form-input"></div>
+                    <button type="submit" id="form-submit-btn" class="w-full bg-sky-600 text-white font-bold py-2 px-4 rounded-lg">Adicionar Chapa</button>
+                    <button type="button" id="btn-cancelar" class="w-full bg-slate-500 text-white font-bold py-2 px-4 rounded-lg hidden">Cancelar Edição</button>
+                </form>
+            </div>
+
+            <div class="lg:col-span-2 bg-white p-8 rounded-2xl shadow-xl border border-sky-100">
+                <div class="flex flex-col md:flex-row md:justify-between md:items-center mb-4 gap-2">
+                    <h2 class="text-2xl font-bold text-sky-700">Chapas Cadastradas</h2>
+                    <select id="marca-select" class="w-full md:w-1/3 p-2 border rounded-md"></select>
+                </div>
+                <div id="lista-produtos" class="overflow-y-auto max-h-[60vh] pr-2"></div>
+            </div>
+        </div>
+    </div>
+    <script src="/admin/admin.js"></script>
+</body>
+</html>
